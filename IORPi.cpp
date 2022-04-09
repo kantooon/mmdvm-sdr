@@ -102,6 +102,7 @@ void CIO::interrupt()
 
     uint16_t sample = DC_OFFSET;
     uint8_t control = MARK_NONE;
+    uint32_t num_items = 720;
     ::pthread_mutex_lock(&m_TXlock);
    while(m_txBuffer.get(sample, control))
    {
@@ -109,18 +110,26 @@ void CIO::interrupt()
         sample *= 5;		// amplify by 12dB	
         short signed_sample = (short)sample;
 
-        if(m_audiobuf.size() >= 720)
+        if(m_samplebuf.size() >= num_items)
         {
-            zmq::message_t reply (720*sizeof(short));
-            memcpy (reply.data (), (unsigned char *)m_audiobuf.data(), 720*sizeof(short));
+            int buf_size = sizeof(uint32_t) + num_items * sizeof(uint8_t) + num_items * sizeof(int16_t);
+            
+            zmq::message_t reply (buf_size);
+            memcpy (reply.data (), &num_items, sizeof(uint32_t));
+            memcpy ((unsigned char *)reply.data () + sizeof(uint32_t), (unsigned char *)m_controlbuf.data(), num_items * sizeof(uint8_t));
+            memcpy ((unsigned char *)reply.data () + sizeof(uint32_t) + num_items * sizeof(uint8_t),
+                    (unsigned char *)m_samplebuf.data(), num_items*sizeof(int16_t));
             m_zmqsocket.send (reply, zmq::send_flags::dontwait);
             usleep(9600 * 3);
-            m_audiobuf.erase(m_audiobuf.begin(), m_audiobuf.begin()+720);
-            m_audiobuf.push_back(signed_sample);
+            m_samplebuf.erase(m_samplebuf.begin(), m_samplebuf.begin()+num_items);
+            m_controlbuf.erase(m_controlbuf.begin(), m_controlbuf.begin()+num_items);
+            m_samplebuf.push_back(signed_sample);
+            m_controlbuf.push_back(control);
         }
         else
         {
-            m_audiobuf.push_back(signed_sample);
+            m_samplebuf.push_back(signed_sample);
+            m_controlbuf.push_back(control);
         }
 
    }
@@ -147,16 +156,19 @@ void CIO::interruptRX()
     zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::none);
     //usleep(500); // RX buffer overflows without the block_size change in IO::process()
     int size = mq_message.size();
+    uint32_t data_size = 0;
     if(size < 1)
         return;
+    memcpy(&data_size, (unsigned char*)mq_message.data(), sizeof(uint32_t));
     
     ::pthread_mutex_lock(&m_RXlock);
     u_int16_t rx_buf_space = m_rxBuffer.getSpace();
     
-    for(int i=0;i < size;i+=2)
+    for(int i=0;i < data_size;i++)
     {
         short signed_sample = 0;
-        memcpy(&signed_sample, (unsigned char*)mq_message.data() + i, sizeof(short));
+        memcpy(&control, (unsigned char*)mq_message.data() + sizeof(uint32_t) + i, sizeof(uint8_t));
+        memcpy(&signed_sample, (unsigned char*)mq_message.data() + sizeof(uint32_t) + data_size * sizeof(uint8_t) + i * sizeof(short), sizeof(short));
         m_rxBuffer.put((uint16_t)signed_sample, control);
         m_rssiBuffer.put(3U);
     }

@@ -90,7 +90,8 @@ m_detect(false),
 m_adcOverflow(0U),
 m_dacOverflow(0U),
 m_watchdog(0U),
-m_lockout(false)
+m_lockout(false),
+m_txDelayCounterStarted(false)
 {
   ::memset(m_rrcState,      0x00U,  70U * sizeof(q15_t));
   ::memset(m_gaussianState, 0x00U,  40U * sizeof(q15_t));
@@ -286,9 +287,24 @@ void CIO::process()
 
     ::pthread_mutex_lock(&m_TXlock);
   // Switch off the transmitter if needed
-  if (m_txBuffer.getData() == 0U && m_tx) {
-    m_tx = false;
-    setPTTInt(m_pttInvert ? true : false);
+  if (m_txBuffer.getData() == 0U && m_tx && !m_txDelayCounterStarted) {
+    m_txDelayCounterStarted = true;
+    t1 = std::chrono::high_resolution_clock::now();
+  }
+  if(m_txDelayCounterStarted)
+  {
+      t2 = std::chrono::high_resolution_clock::now();
+      uint64_t time_delta = std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count();
+      if(time_delta > 1200000000L)
+      {
+          if (m_txBuffer.getData() == 0U && m_tx)
+          {
+            m_tx = false;
+          }
+          m_txDelayCounterStarted = false;
+      }
+      if(m_txBuffer.getData() > 0U)
+          m_txDelayCounterStarted = false;
   }
   ::pthread_mutex_unlock(&m_TXlock);
 
@@ -406,7 +422,7 @@ void CIO::process()
         q15_t DMRVals[RX_BLOCK_SIZE];
         ::arm_fir_fast_q15(&m_rrcFilter, samples, DMRVals, RX_BLOCK_SIZE);
 
-        if (0) {
+        if (m_duplex) {
           // If the transmitter isn't on, use the DMR idle RX to detect the wakeup CSBKs
           if (m_tx)
             dmrRX.samples(DMRVals, rssi, control, RX_BLOCK_SIZE);
@@ -473,6 +489,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   // Switch the transmitter on if needed
   if (!m_tx) {
     m_tx = true;
+    m_txDelayCounterStarted = false;
     setPTTInt(m_pttInvert ? false : true);
   }
 

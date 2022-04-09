@@ -26,6 +26,7 @@
 #include "SampleRB.h"
 #include "RSSIRB.h"
 #include <zmq.hpp>
+#include <chrono>
 
 class CIO {
 public:
@@ -109,13 +110,17 @@ private:
   bool                 m_lockout;
   zmq::context_t m_zmqcontext;
   zmq::socket_t m_zmqsocket;
-  std::vector<short> m_audiobuf;
+  std::vector<short> m_samplebuf;
+  std::vector<uint8_t> m_controlbuf;
   
   zmq::context_t m_zmqcontextRX;
   zmq::socket_t m_zmqsocketRX;
   std::vector<short> m_audiobufRX;
   pthread_mutex_t m_TXlock;
   pthread_mutex_t m_RXlock;
+  bool m_txDelayCounterStarted;
+  std::chrono::high_resolution_clock::time_point t1;
+  std::chrono::high_resolution_clock::time_point t2;
   bool m_COSint;
 
   // Hardware specific routines
