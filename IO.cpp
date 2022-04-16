@@ -132,6 +132,7 @@ m_txDelayCounterStarted(false)
   m_zmqcontext = zmq::context_t(1);
   m_zmqsocket = zmq::socket_t(m_zmqcontext, ZMQ_PUSH);
   m_zmqsocket.bind ("ipc:///tmp/mmdvm-tx.ipc");
+  m_zmqsocket.setsockopt(ZMQ_SNDHWM, 5);
   
   m_zmqcontextRX = zmq::context_t(1);
   m_zmqsocketRX = zmq::socket_t(m_zmqcontextRX, ZMQ_PULL);
