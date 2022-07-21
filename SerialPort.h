@@ -28,7 +28,7 @@ class CSerialPort {
 public:
   CSerialPort();
 
-  void start();
+  void start(int cn=0);
 
   void process();
 
@@ -78,7 +78,7 @@ private:
   void    setMode(MMDVM_STATE modemState);
 
   // Hardware versions
-  void    beginInt(uint8_t n, int speed);
+  void beginInt(uint8_t n, int speed, int cn);
   int     availableInt(uint8_t n);
   int     availableForWriteInt(uint8_t n);
   uint8_t readInt(uint8_t n);

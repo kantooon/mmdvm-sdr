@@ -23,7 +23,7 @@ class ISerialPort {
 public:
 	virtual ~ISerialPort() = 0;
 
-	virtual bool open() = 0;
+	virtual bool open(int cn=0) = 0;
 
 	virtual int read(unsigned char* buffer, unsigned int length) = 0;
 

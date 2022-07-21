@@ -49,9 +49,10 @@ CSerialController::~CSerialController()
 {
 }
 
-bool CSerialController::open()
+bool CSerialController::open(int cn)
 {
 	assert(m_fd == -1);
+    std::string dev_name = "ttyMMDVM" + std::to_string(cn);
 
 	m_fd = ::open(m_device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY, 0);
 	if (m_fd < 0) {
@@ -75,12 +76,12 @@ bool CSerialController::open()
         getcwd(cwdpath, 256);
 
     	char* pts_name = ptsname(m_fd);
-    	LogMessage("virtual pts: %s <> %s/ttyMMDVM0", pts_name, cwdpath);
+    	LogMessage("virtual pts: %s <> %s/%s", pts_name, cwdpath, dev_name.c_str());
 
-    	unlink("ttyMMDVM0");
+    	unlink(dev_name.c_str());
 
-    	if ((symlink(pts_name, "ttyMMDVM0")) == -1) {	// creating symlink in local dir - /dev requires suid :(	
-        	LogError("error creating symlink from %s to ttyMMDVM0", pts_name);
+    	if ((symlink(pts_name, dev_name.c_str())) == -1) {	// creating symlink in local dir - /dev requires suid :(	
+        	LogError("error creating symlink from %s to %s", pts_name, dev_name.c_str());
         	return false;
     	}
 

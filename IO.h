@@ -31,6 +31,8 @@
 class CIO {
 public:
   CIO();
+  
+  void setCN(int cn);
 
   void start();
 

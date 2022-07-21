@@ -46,7 +46,7 @@ public:
 	CSerialController(const std::string& device, SERIAL_SPEED speed, bool assertRTS = false);
 	virtual ~CSerialController();
 
-	virtual bool open();
+	bool open(int cn=0);
 
 	virtual int read(unsigned char* buffer, unsigned int length);
 

@@ -25,6 +25,7 @@
 
 #include "Log.h"
 #include "unistd.h"
+#include <getopt.h>
 
 // Global variables
 MMDVM_STATE m_modemState = STATE_IDLE;
@@ -71,11 +72,12 @@ CCWIdTX cwIdTX;
 CSerialPort serial;
 CIO io;
 
-void setup()
+void setup(int cn)
 {
  LogDebug("MMDVM modem setup()");
  
- serial.start();
+ serial.start(cn);
+ io.setCN(cn);
  
 }
 
@@ -128,9 +130,19 @@ void loop()
   usleep(20);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-  setup();
+  int opt, cn;
+  while ((opt = getopt(argc, argv, "c:")) != -1) {
+    switch (opt) {
+    case 'c':
+        cn = atoi(optarg);;
+        break;
+    default:
+        cn = 0;
+    }
+  }
+  setup(cn);
 
   for (;;)
     loop();

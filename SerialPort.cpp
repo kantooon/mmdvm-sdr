@@ -567,9 +567,9 @@ void CSerialPort::setMode(MMDVM_STATE modemState)
   io.setMode(modemState);
 }
 
-void CSerialPort::start()
+void CSerialPort::start(int cn)
 {
-  beginInt(1U, 115200);
+  beginInt(1U, 115200, cn);
 
 #if defined(SERIAL_REPEATER)
   beginInt(3U, 9600);

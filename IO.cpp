@@ -129,14 +129,20 @@ m_txDelayCounterStarted(false)
   
   selfTest();
   setCOSInt(false);
+  
+}
+
+void CIO::setCN(int cn)
+{
+  DEBUG2("Using SDR channel %d", cn);
   m_zmqcontext = zmq::context_t(1);
   m_zmqsocket = zmq::socket_t(m_zmqcontext, ZMQ_PUSH);
-  m_zmqsocket.bind ("ipc:///tmp/mmdvm-tx.ipc");
+  m_zmqsocket.bind ("ipc:///tmp/mmdvm-tx" + std::to_string(cn) + ".ipc");
   m_zmqsocket.setsockopt(ZMQ_SNDHWM, 5);
   
   m_zmqcontextRX = zmq::context_t(1);
   m_zmqsocketRX = zmq::socket_t(m_zmqcontextRX, ZMQ_PULL);
-  m_zmqsocketRX.connect ("ipc:///tmp/mmdvm-rx.ipc");
+  m_zmqsocketRX.connect ("ipc:///tmp/mmdvm-rx" + std::to_string(cn) + ".ipc");
 }
 
 void CIO::selfTest()

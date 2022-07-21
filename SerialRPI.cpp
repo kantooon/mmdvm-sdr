@@ -35,14 +35,14 @@
 #define BUF_MAX 1024
 unsigned char read_buffer;
 
-void CSerialPort::beginInt(uint8_t n, int speed)
+void CSerialPort::beginInt(uint8_t n, int speed, int cn)
 {
   switch (n) {
     case 1U:
      //      Serial.begin(speed);
       read_buffer = 0x00;
       m_controller = CSerialController(VSERIAL, SERIAL_115200, false);
-      m_controller.open();
+      m_controller.open(cn);
       break;
     default:
       break;
