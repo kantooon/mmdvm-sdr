@@ -35,11 +35,14 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <chrono>
 
 
 const uint16_t DC_OFFSET = 2048U;
 
 unsigned char wavheader[] = {0x52,0x49,0x46,0x46,0xb8,0xc0,0x8f,0x00,0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0xc0,0x5d,0x00,0x00,0x80,0xbb,0x00,0x00,0x02,0x00,0x10,0x00,0x64,0x61,0x74,0x61,0xff,0xff,0xff,0xff};
+std::chrono::high_resolution_clock::time_point tm1 = std::chrono::high_resolution_clock::now();
+std::chrono::high_resolution_clock::time_point tm2 = std::chrono::high_resolution_clock::now();
 
 void CIO::initInt()
 {
@@ -103,37 +106,57 @@ void CIO::interrupt()
     uint16_t sample = DC_OFFSET;
     uint8_t control = MARK_NONE;
     uint32_t num_items = 720;
+    bool wait_for_data = false;
     ::pthread_mutex_lock(&m_TXlock);
-   while(m_txBuffer.get(sample, control))
+    if(m_txBuffer.getData() >= num_items)
+    {
+        while(m_txBuffer.get(sample, control))
+        {
+
+            sample *= 5;		// amplify by 12dB	
+            short signed_sample = (short)sample;
+            m_samplebuf.push_back(signed_sample);
+            m_controlbuf.push_back(control);
+
+            if(m_samplebuf.size() >= num_items)
+            {
+                int buf_size = sizeof(uint32_t) + num_items * sizeof(uint8_t) + num_items * sizeof(int16_t);
+                
+                zmq::message_t reply (buf_size);
+                memcpy (reply.data (), &num_items, sizeof(uint32_t));
+                memcpy ((unsigned char *)reply.data () + sizeof(uint32_t), (unsigned char *)m_controlbuf.data(), num_items * sizeof(uint8_t));
+                memcpy ((unsigned char *)reply.data () + sizeof(uint32_t) + num_items * sizeof(uint8_t),
+                        (unsigned char *)m_samplebuf.data(), num_items*sizeof(int16_t));
+                m_zmqsocket.send (reply, zmq::send_flags::dontwait);
+                wait_for_data = true;
+                m_samplebuf.erase(m_samplebuf.begin(), m_samplebuf.begin()+num_items);
+                m_controlbuf.erase(m_controlbuf.begin(), m_controlbuf.begin()+num_items);
+            }
+        }
+        ::pthread_mutex_unlock(&m_TXlock);
+    }
+    else
+    {
+        ::pthread_mutex_unlock(&m_TXlock);
+        usleep(20);
+    }
+       
+   if (wait_for_data)
    {
-
-        sample *= 5;		// amplify by 12dB	
-        short signed_sample = (short)sample;
-
-        if(m_samplebuf.size() >= num_items)
+        tm1 = std::chrono::high_resolution_clock::now();
+        tm2 = std::chrono::high_resolution_clock::now();
+        while(std::chrono::duration_cast<std::chrono::nanoseconds>(tm2-tm1).count() < 29900000L)
         {
-            int buf_size = sizeof(uint32_t) + num_items * sizeof(uint8_t) + num_items * sizeof(int16_t);
-            
-            zmq::message_t reply (buf_size);
-            memcpy (reply.data (), &num_items, sizeof(uint32_t));
-            memcpy ((unsigned char *)reply.data () + sizeof(uint32_t), (unsigned char *)m_controlbuf.data(), num_items * sizeof(uint8_t));
-            memcpy ((unsigned char *)reply.data () + sizeof(uint32_t) + num_items * sizeof(uint8_t),
-                    (unsigned char *)m_samplebuf.data(), num_items*sizeof(int16_t));
-            m_zmqsocket.send (reply, zmq::send_flags::dontwait);
-            usleep(9600 * 3);
-            m_samplebuf.erase(m_samplebuf.begin(), m_samplebuf.begin()+num_items);
-            m_controlbuf.erase(m_controlbuf.begin(), m_controlbuf.begin()+num_items);
-            m_samplebuf.push_back(signed_sample);
-            m_controlbuf.push_back(control);
+            usleep(10);
+            tm2 = std::chrono::high_resolution_clock::now();
         }
-        else
-        {
-            m_samplebuf.push_back(signed_sample);
-            m_controlbuf.push_back(control);
-        }
-
+       wait_for_data = false;
    }
-   ::pthread_mutex_unlock(&m_TXlock);
+   
+   
+   
+   
+   
    
     sample = 2048U;
 

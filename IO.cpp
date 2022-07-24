@@ -294,6 +294,11 @@ void CIO::process()
 
     ::pthread_mutex_lock(&m_TXlock);
   // Switch off the transmitter if needed
+    if (m_txBuffer.getData() == 0U && m_tx)
+    {
+    m_tx = false;
+    }
+  /*
   if (m_txBuffer.getData() == 0U && m_tx && !m_txDelayCounterStarted) {
     m_txDelayCounterStarted = true;
     t1 = std::chrono::high_resolution_clock::now();
@@ -313,6 +318,7 @@ void CIO::process()
       if(m_txBuffer.getData() > 0U)
           m_txDelayCounterStarted = false;
   }
+  */
   ::pthread_mutex_unlock(&m_TXlock);
 
   ::pthread_mutex_lock(&m_RXlock);
