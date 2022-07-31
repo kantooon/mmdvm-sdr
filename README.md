@@ -36,7 +36,13 @@ For cross-compiling arm ([rpitools](https://github.com/raspberrypi/tools) to be 
 
 Running the modem binary:
  
-    ./mmdvm 
+    ./mmdvm
+
+To use the multi-channel mode, add an argument: -c X where X is the channel number. By default, if no argument is given, the channel number is 0. Example:
+
+    ./mmdvm -c 1
+
+For multi-channel mode, you will need to configure the correct ttyMMDVM number in MMDVM.ini (create different ini files for each channels, and also set a different SSID and a different local port for the network connection).
 
 It will display the PTY endpoint, which has to be specified in the MMDVHost/MMDVM.ini.
 
