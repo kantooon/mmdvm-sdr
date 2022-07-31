@@ -176,7 +176,7 @@ void CIO::interruptRX()
     uint16_t sample = DC_OFFSET;
     uint8_t control = MARK_NONE;
     zmq::message_t mq_message;
-    zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::none);
+    zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::dontwait);
     //usleep(500); // RX buffer overflows without the block_size change in IO::process()
     int size = mq_message.size();
     uint32_t data_size = 0;
