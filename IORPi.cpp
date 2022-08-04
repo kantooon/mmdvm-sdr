@@ -92,7 +92,7 @@ void* CIO::helperRX(void* arg)
   while (1)
   {
 
-    usleep(1000);
+    usleep(200);
     p->interruptRX();
   }
 
