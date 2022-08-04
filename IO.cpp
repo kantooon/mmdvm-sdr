@@ -91,6 +91,7 @@ m_adcOverflow(0U),
 m_dacOverflow(0U),
 m_watchdog(0U),
 m_lockout(false),
+m_channelNumber(0),
 m_txDelayCounterStarted(false)
 {
   ::memset(m_rrcState,      0x00U,  70U * sizeof(q15_t));
@@ -135,10 +136,11 @@ m_txDelayCounterStarted(false)
 void CIO::setCN(int cn)
 {
   DEBUG2("Using SDR channel %d", cn);
+  m_channelNumber = cn;
   m_zmqcontext = zmq::context_t(1);
   m_zmqsocket = zmq::socket_t(m_zmqcontext, ZMQ_PUSH);
   m_zmqsocket.bind ("ipc:///tmp/mmdvm-tx" + std::to_string(cn) + ".ipc");
-  m_zmqsocket.setsockopt(ZMQ_SNDHWM, 5);
+  m_zmqsocket.setsockopt(ZMQ_SNDHWM, 3);
   
   m_zmqcontextRX = zmq::context_t(1);
   m_zmqsocketRX = zmq::socket_t(m_zmqcontextRX, ZMQ_PULL);
@@ -553,6 +555,17 @@ uint16_t CIO::getSpace()
     u_int16_t space = m_txBuffer.getSpace();
     ::pthread_mutex_unlock(&m_TXlock);
   return space;
+}
+
+void CIO::resetTXBuf() 
+{
+    uint16_t sample;
+    uint8_t control;
+    ::pthread_mutex_lock(&m_TXlock);
+    while(m_txBuffer.get(sample, control))
+    {
+    }
+    ::pthread_mutex_unlock(&m_TXlock);
 }
 
 void CIO::setDecode(bool dcd)

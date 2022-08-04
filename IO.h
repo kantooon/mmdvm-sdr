@@ -41,6 +41,7 @@ public:
   void write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t* control = NULL);
 
   uint16_t getSpace();
+  void resetTXBuf();
 
   void setDecode(bool dcd);
   void setADCDetection(bool detect);
@@ -117,7 +118,7 @@ private:
   
   zmq::context_t m_zmqcontextRX;
   zmq::socket_t m_zmqsocketRX;
-  std::vector<short> m_audiobufRX;
+  int m_channelNumber;
   pthread_mutex_t m_TXlock;
   pthread_mutex_t m_RXlock;
   bool m_txDelayCounterStarted;
