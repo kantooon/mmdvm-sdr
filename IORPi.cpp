@@ -69,6 +69,8 @@ void CIO::startInt()
 
     ::pthread_create(&m_thread, NULL, helper, this);
     ::pthread_create(&m_threadRX, NULL, helperRX, this);
+    ::pthread_setname_np(m_thread, "mmdvm_tx");
+    ::pthread_setname_np(m_threadRX, "mmdvm_rx");
 }
 
 void* CIO::helper(void* arg)
@@ -176,7 +178,7 @@ void CIO::interruptRX()
     uint16_t sample = DC_OFFSET;
     uint8_t control = MARK_NONE;
     zmq::message_t mq_message;
-    zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::dontwait);
+    zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::none);
     //usleep(500); // RX buffer overflows without the block_size change in IO::process()
     int size = mq_message.size();
     uint32_t data_size = 0;
