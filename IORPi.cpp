@@ -79,8 +79,6 @@ void* CIO::helper(void* arg)
 
   while (1)
   {
-      if(p->m_txBuffer.getData() < 1)
-        usleep(20);
     p->interrupt();
   }
 
@@ -93,8 +91,6 @@ void* CIO::helperRX(void* arg)
 
   while (1)
   {
-
-    usleep(200);
     p->interruptRX();
   }
 
@@ -140,7 +136,7 @@ void CIO::interrupt()
     else
     {
         ::pthread_mutex_unlock(&m_TXlock);
-        usleep(20);
+        usleep(5);
     }
        
    if (wait_for_data)
