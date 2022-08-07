@@ -143,7 +143,7 @@ void CIO::interrupt()
    {
         tm1 = std::chrono::high_resolution_clock::now();
         tm2 = std::chrono::high_resolution_clock::now();
-        while(std::chrono::duration_cast<std::chrono::nanoseconds>(tm2-tm1).count() < 29900000L)
+        while(std::chrono::duration_cast<std::chrono::nanoseconds>(tm2-tm1).count() < 29000000L)
         {
             usleep(10);
             tm2 = std::chrono::high_resolution_clock::now();
