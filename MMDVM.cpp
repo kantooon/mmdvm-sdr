@@ -127,7 +127,16 @@ void loop()
   if (m_modemState == STATE_IDLE)
     cwIdTX.process();
   
-  usleep(5);
+  struct timespec local_time;
+  clock_gettime(CLOCK_REALTIME, &local_time);
+
+  local_time.tv_nsec += 5000;
+  if(local_time.tv_nsec > 999999999)
+  {
+      local_time.tv_sec++;
+      local_time.tv_nsec -= 1000000000;
+  }
+  clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &local_time, NULL);
 }
 
 int main(int argc, char *argv[])
