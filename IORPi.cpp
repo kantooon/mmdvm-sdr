@@ -202,9 +202,26 @@ void CIO::interruptRX()
         return;
     memcpy(&data_size, (unsigned char*)mq_message.data(), sizeof(uint32_t));
     
+    u_int16_t rx_buf_space = 0;
+    while(rx_buf_space < size)
+    {
+        ::pthread_mutex_lock(&m_RXlock);
+        rx_buf_space = m_rxBuffer.getSpace();
+        ::pthread_mutex_unlock(&m_RXlock);
+        if(rx_buf_space >= size)
+            break;
+        struct timespec local_time;
+        clock_gettime(CLOCK_REALTIME, &local_time);
+
+        local_time.tv_nsec += 20000;
+        if(local_time.tv_nsec > 999999999)
+        {
+          local_time.tv_sec++;
+          local_time.tv_nsec -= 1000000000;
+        }
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &local_time, NULL);
+    }
     ::pthread_mutex_lock(&m_RXlock);
-    u_int16_t rx_buf_space = m_rxBuffer.getSpace();
-    
     for(int i=0;i < data_size;i++)
     {
         short signed_sample = 0;
