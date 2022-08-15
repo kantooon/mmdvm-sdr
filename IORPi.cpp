@@ -201,12 +201,12 @@ void CIO::interruptRX()
     memcpy(&data_size, (unsigned char*)mq_message.data(), sizeof(uint32_t));
     
     u_int16_t rx_buf_space = 0;
-    while(rx_buf_space < size)
+    while(rx_buf_space < data_size)
     {
         ::pthread_mutex_lock(&m_RXlock);
         rx_buf_space = m_rxBuffer.getSpace();
         ::pthread_mutex_unlock(&m_RXlock);
-        if(rx_buf_space >= size)
+        if(rx_buf_space >= data_size)
             break;
         struct timespec local_time;
         clock_gettime(CLOCK_REALTIME, &local_time);
