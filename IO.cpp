@@ -54,7 +54,7 @@ const uint16_t GAUSSIAN_0_5_FILTER_LEN = 12U;
 static q15_t   BOXCAR_FILTER[] = {12000, 12000, 12000, 12000, 12000, 0};
 const uint16_t BOXCAR_FILTER_LEN = 6U;
 
-const uint16_t DC_OFFSET = 2048U;
+const uint16_t DC_OFFSET = 0U; //2048U; The SDR transmits samples centered on zero
 
 CIO::CIO() :
 m_started(false),
@@ -339,7 +339,7 @@ void CIO::process()
 
     ::pthread_mutex_lock(&m_RXlock);
     for (uint16_t i = 0U; i < RX_BLOCK_SIZE; i++) {
-      uint16_t sample;
+      int16_t sample;
       m_rxBuffer.get(sample, control[i]);
       m_rssiBuffer.get(rssi[i]);
 
@@ -535,7 +535,7 @@ void CIO::write(MMDVM_STATE mode, q15_t* samples, uint16_t length, const uint8_t
   for (uint16_t i = 0U; i < length; i++) {
     q31_t res1 = samples[i] * txLevel;
     q15_t res2 = q15_t(__SSAT((res1 >> 15), 16));
-    uint16_t res3 = uint16_t(res2); // + m_txDCOffset);
+    int16_t res3 = int16_t(res2) + m_txDCOffset;
 	//DEBUG2("txDCoffset: %d", m_txDCOffset);
 
     // Detect DAC overflow
@@ -561,7 +561,7 @@ uint16_t CIO::getSpace()
 
 void CIO::resetTXBuf() 
 {
-    uint16_t sample;
+    int16_t sample;
     uint8_t control;
     ::pthread_mutex_lock(&m_TXlock);
     while(m_txBuffer.get(sample, control))

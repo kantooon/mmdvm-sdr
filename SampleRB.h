@@ -43,15 +43,15 @@ public:
   
   uint16_t getData() const;
 
-  bool put(uint16_t sample, uint8_t control);
+  bool put(int16_t sample, uint8_t control);
 
-  bool get(uint16_t& sample, uint8_t& control);
+  bool get(int16_t& sample, uint8_t& control);
 
   bool hasOverflowed();
 
 private:
   uint16_t           m_length;
-  volatile uint16_t* m_samples;
+  volatile int16_t* m_samples;
   volatile uint8_t*  m_control;
   volatile uint16_t  m_head;
   volatile uint16_t  m_tail;

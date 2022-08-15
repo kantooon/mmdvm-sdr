@@ -101,7 +101,7 @@ void* CIO::helperRX(void* arg)
 void CIO::interrupt()
 {
 
-    uint16_t sample = DC_OFFSET;
+    int16_t sample = DC_OFFSET;
     uint8_t control = MARK_NONE;
     uint32_t num_items = 720;
     bool wait_for_data = false;
@@ -113,8 +113,7 @@ void CIO::interrupt()
         {
 
             sample *= 5;		// amplify by 12dB	
-            short signed_sample = (short)sample;
-            m_samplebuf.push_back(signed_sample);
+            m_samplebuf.push_back(sample);
             m_controlbuf.push_back(control);
 
             if(m_samplebuf.size() >= num_items)
@@ -223,10 +222,10 @@ void CIO::interruptRX()
     ::pthread_mutex_lock(&m_RXlock);
     for(int i=0;i < data_size;i++)
     {
-        short signed_sample = 0;
+        int16_t signed_sample = 0;
         memcpy(&control, (unsigned char*)mq_message.data() + sizeof(uint32_t) + i, sizeof(uint8_t));
-        memcpy(&signed_sample, (unsigned char*)mq_message.data() + sizeof(uint32_t) + data_size * sizeof(uint8_t) + i * sizeof(short), sizeof(short));
-        m_rxBuffer.put((uint16_t)signed_sample, control);
+        memcpy(&signed_sample, (unsigned char*)mq_message.data() + sizeof(uint32_t) + data_size * sizeof(uint8_t) + i * sizeof(int16_t), sizeof(int16_t));
+        m_rxBuffer.put(signed_sample, control);
         m_rssiBuffer.put(0U);
     }
     ::pthread_mutex_unlock(&m_RXlock);

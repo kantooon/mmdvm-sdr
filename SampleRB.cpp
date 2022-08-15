@@ -29,7 +29,7 @@ m_tail(0U),
 m_full(false),
 m_overflow(false)
 {
-  m_samples = new uint16_t[length];
+  m_samples = new int16_t[length];
   m_control = new uint8_t[length];
 }
 
@@ -60,7 +60,7 @@ uint16_t CSampleRB::getData() const
     return m_length - m_tail + m_head;
 }
 
-bool CSampleRB::put(uint16_t sample, uint8_t control)
+bool CSampleRB::put(int16_t sample, uint8_t control)
 {
   if (m_full) {
     m_overflow = true;
@@ -80,7 +80,7 @@ bool CSampleRB::put(uint16_t sample, uint8_t control)
   return true;
 }
 
-bool CSampleRB::get(uint16_t& sample, uint8_t& control)
+bool CSampleRB::get(int16_t& sample, uint8_t& control)
 {
   if (m_head == m_tail && !m_full)
     return false;
