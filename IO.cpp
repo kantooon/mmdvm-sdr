@@ -344,10 +344,10 @@ void CIO::process()
       m_rssiBuffer.get(rssi[i]);
 
       // Detect ADC overflow
-      if (m_detect && (sample == 0U || sample == 4095U))
-        m_adcOverflow++;
+      //if (m_detect && (sample == 0U || sample == 4095U))
+      //  m_adcOverflow++;
 
-      q15_t res1 = q15_t(sample);// - m_rxDCOffset;
+      q15_t res1 = q15_t(sample) - m_rxDCOffset;
       q31_t res2 = res1 * m_rxLevel;
       samples[i] = q15_t(__SSAT((res2 >> 15), 16));
     }

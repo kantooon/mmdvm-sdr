@@ -195,7 +195,6 @@ void CIO::interruptRX()
     uint8_t control = MARK_NONE;
     zmq::message_t mq_message;
     zmq::recv_result_t recv_result = m_zmqsocketRX.recv(mq_message, zmq::recv_flags::none);
-    //usleep(500); // RX buffer overflows without the block_size change in IO::process()
     int size = mq_message.size();
     uint32_t data_size = 0;
     if(size < 1)
@@ -228,7 +227,7 @@ void CIO::interruptRX()
         memcpy(&control, (unsigned char*)mq_message.data() + sizeof(uint32_t) + i, sizeof(uint8_t));
         memcpy(&signed_sample, (unsigned char*)mq_message.data() + sizeof(uint32_t) + data_size * sizeof(uint8_t) + i * sizeof(short), sizeof(short));
         m_rxBuffer.put((uint16_t)signed_sample, control);
-        m_rssiBuffer.put(3U);
+        m_rssiBuffer.put(0U);
     }
     ::pthread_mutex_unlock(&m_RXlock);
     return;
